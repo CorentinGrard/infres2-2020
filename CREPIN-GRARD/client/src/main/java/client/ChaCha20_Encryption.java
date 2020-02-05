@@ -1,28 +1,40 @@
 package client;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.ChaCha20ParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class ChaCha20_Encryption
 {
 
-    public static SecretKey GenerateKey() throws NoSuchAlgorithmException {
-        KeyGenerator keyGenerator = KeyGenerator.getInstance("ChaCha20");
-        keyGenerator.init(256);
-        SecretKey key = keyGenerator.generateKey();
+    public static SecretKey GenerateKey(String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
+
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+
+        byte[] hashedPassword = factory.generateSecret(spec).getEncoded();
+        SecretKey key = new SecretKeySpec(hashedPassword, "ChaCha20");
 
         return key;
     }
 
-    public static byte[] encrypt(String text, SecretKey key) throws Exception
+    public static byte[] encrypt(byte[] plaintext, SecretKey key) throws Exception
     {
-        byte[] plaintext = text.getBytes();
         byte[] nonceBytes = new byte[12];
         int counter = 5;
 
