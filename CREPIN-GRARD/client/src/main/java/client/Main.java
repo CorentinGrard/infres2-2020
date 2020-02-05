@@ -8,7 +8,7 @@ public class Main {
     {
         Socket client = new Socket("127.0.0.1", 2345);
         ServeurDB db = new ServeurDB();
-        Thread t = new Thread(new ClientSocket(client, db));
+        Thread t = new Thread(new ClientSocket(client, db, "toto"));
         t.start();
     }
 

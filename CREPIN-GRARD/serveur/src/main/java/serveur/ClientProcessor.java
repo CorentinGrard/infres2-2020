@@ -13,11 +13,13 @@ public class ClientProcessor implements Runnable {
   private PrintWriter writer = null;
   private BufferedReader reader = null;
   private BufferedReader clavier = null;
+  private ChatChat chat;
 
-  public ClientProcessor(Socket pSock, ServeurDB db) {
+  public ClientProcessor(Socket pSock, ServeurDB db, String password) {
     this.sock = pSock;
     this.db = db;
     this.clavier = new BufferedReader(new InputStreamReader(System.in));
+    this.chat = new ChatChat(password);
   }
 
   public void run() {
@@ -41,19 +43,29 @@ public class ClientProcessor implements Runnable {
   public void sendMessage() throws IOException {
     System.out.println("Enter your message : ");
     String str = this.clavier.readLine();
-    this.db.addMessage("Serveur", str);
-    this.writer.println(str);
-    if (str == "END") {
-      stopConnection();
+    try {
+      String encrypt = chat.encrypt(str);
+      this.db.addMessage("Client", encrypt);
+      writer.println(str);
+      if (str == "END") {
+        stopConnection();
+      }
+    } catch (Exception e) {
+      // TODO: handle exception
     }
   }
 
   public void readMessage() throws IOException {
-    String resp = reader.readLine();
-    this.db.addMessage("Client", resp);
-    System.out.println("Client : " + resp);
-    if (resp == "END") {
-      stopConnection();
+    String crypted = reader.readLine();
+    this.db.addMessage("Serveur", crypted);
+    try {
+      String resp = chat.decrypt(crypted);
+      System.out.println("Serveur : " + resp);
+      if (resp == "END") {
+        stopConnection();
+      }
+    } catch (Exception e) {
+      // TODO: handle exception
     }
   }
 

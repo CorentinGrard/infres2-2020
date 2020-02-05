@@ -1,22 +1,29 @@
-package client;
+package serveur;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
+import java.util.Base64;
 
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.ChaCha20ParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-public class ChaCha20_Encryption
+public class ChatChat
 {
+    private SecretKey key;
+
+    public ChatChat(String password){
+        try {
+            this.key = GenerateKey(password);
+        } catch (Exception e) {
+            //TODO: handle exception
+        }
+    }
 
     public static SecretKey GenerateKey(String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
 
@@ -33,7 +40,7 @@ public class ChaCha20_Encryption
         return key;
     }
 
-    public static byte[] encrypt(byte[] plaintext, SecretKey key) throws Exception
+    public String encrypt(String plaintext) throws Exception
     {
         byte[] nonceBytes = new byte[12];
         int counter = 5;
@@ -51,12 +58,12 @@ public class ChaCha20_Encryption
         cipher.init(Cipher.ENCRYPT_MODE, keySpec, paramSpec);
 
         // Perform Encryption
-        byte[] cipherText = cipher.doFinal(plaintext);
+        byte[] cipherText = cipher.doFinal(plaintext.getBytes());
 
-        return cipherText;
+        return Base64.getEncoder().encodeToString(cipherText);
     }
 
-    public static String decrypt(byte[] cipherText, SecretKey key) throws Exception
+    public String decrypt(String cipherText_base64) throws Exception
     {
         byte[] nonceBytes = new byte[12];
         int counter = 5;
@@ -74,6 +81,7 @@ public class ChaCha20_Encryption
         cipher.init(Cipher.DECRYPT_MODE, keySpec, paramSpec);
 
         // Perform Decryption
+        byte[] cipherText = Base64.getDecoder().decode(cipherText_base64);
         byte[] decryptedText = cipher.doFinal(cipherText);
 
         return new String(decryptedText);
