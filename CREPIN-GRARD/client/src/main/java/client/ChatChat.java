@@ -16,22 +16,22 @@ import javax.crypto.spec.SecretKeySpec;
 public class ChatChat
 {
     private SecretKey key;
+    private String salt;
 
-    public ChatChat(String password){
-        try {
-            this.key = GenerateKey(password);
-        } catch (Exception e) {
-            //TODO: handle exception
-        }
+    public ChatChat(String password, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        this.salt=salt;
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), 65536, 256);
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+
+        byte[] hashedPassword = factory.generateSecret(spec).getEncoded();
+        SecretKey key = new SecretKeySpec(hashedPassword, "ChaCha20");
+
+        this.key=key;
     }
 
-    public static SecretKey GenerateKey(String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public static SecretKey GenerateKey(String password, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
 
-        SecureRandom random = new SecureRandom();
-        byte[] salt = new byte[16];
-        random.nextBytes(salt);
-
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), 65536, 256);
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
 
         byte[] hashedPassword = factory.generateSecret(spec).getEncoded();
