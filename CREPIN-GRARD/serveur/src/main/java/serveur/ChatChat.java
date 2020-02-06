@@ -1,7 +1,6 @@
 package serveur;
 
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
@@ -17,27 +16,15 @@ public class ChatChat
 {
     private SecretKey key;
 
-    public ChatChat(String password){
-        try {
-            this.key = GenerateKey(password);
-        } catch (Exception e) {
-            //TODO: handle exception
-        }
-    }
-
-    public static SecretKey GenerateKey(String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
-
-        SecureRandom random = new SecureRandom();
-        byte[] salt = new byte[16];
-        random.nextBytes(salt);
-
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
+    public ChatChat(String user, String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        ServeurDB db = new ServeurDB();
+        String salt = db.selectSalt(user);
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), 65536, 256);
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
 
         byte[] hashedPassword = factory.generateSecret(spec).getEncoded();
         SecretKey key = new SecretKeySpec(hashedPassword, "ChaCha20");
-
-        return key;
+        this.key=key;
     }
 
     public String encrypt(String plaintext) throws Exception

@@ -6,7 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class ClientSocket implements Runnable {
+public class ClientProcessor implements Runnable {
 
   private Socket sock;
   private ServeurDB db;
@@ -15,11 +15,19 @@ public class ClientSocket implements Runnable {
   private BufferedReader clavier = null;
   private ChatChat chat;
 
-  public ClientSocket(Socket pSock, ServeurDB db, String password) {
+  public ClientProcessor(Socket pSock, ServeurDB db) {
     this.sock = pSock;
     this.db = db;
     this.clavier = new BufferedReader(new InputStreamReader(System.in));
-    this.chat = new ChatChat(password);
+    System.out.println("Entrez votre username : ");
+    try {
+      String user = clavier.readLine();
+      System.out.println("Entrez votre password : ");
+      String password = clavier.readLine();
+      this.chat = new ChatChat(user, password);
+    } catch (Exception e) {
+      // TODO: handle exception
+    }
   }
 
   public void run() {
@@ -47,7 +55,7 @@ public class ClientSocket implements Runnable {
     try {
       String encrypt = chat.encrypt(str);
       this.db.addMessage("Client", encrypt);
-      writer.println(str);
+      writer.println(encrypt);
       if (str == "END") {
         stopConnection();
       }

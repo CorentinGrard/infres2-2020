@@ -46,7 +46,7 @@ public class Serveur_multi {
                   Socket client = server.accept();
                   
                   System.out.println("Connexion cliente reçue.");                  
-                  Thread t = new Thread(new ClientProcessor(client, db, "toto"));
+                  Thread t = new Thread(new ClientProcessor(client, db));
                   t.start();
                   
                } catch (IOException e) {

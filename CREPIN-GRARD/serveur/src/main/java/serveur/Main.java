@@ -9,7 +9,7 @@ public class Main {
       
       Serveur_multi serveur = new Serveur_multi(host,port);
       serveur.open();
-      
+
       System.out.println("Serveur initialisé.");
    }
 }
