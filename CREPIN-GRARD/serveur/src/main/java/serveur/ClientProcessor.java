@@ -52,41 +52,41 @@ public class ClientProcessor implements Runnable {
       String to_decode = reader.readLine();
       byte[] alicePubKeyEnc = Base64.getDecoder().decode(to_decode);
 
-      KeyFactory bobKeyFac = KeyFactory.getInstance("DH");
+      KeyFactory serveurKeyFac = KeyFactory.getInstance("DH");
       X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(alicePubKeyEnc);
 
-      PublicKey alicePubKey = bobKeyFac.generatePublic(x509KeySpec);
+      PublicKey alicePubKey = serveurKeyFac.generatePublic(x509KeySpec);
 
       /*
-       * Bob gets the DH parameters associated with Alice's public key. He must use
+       * Serveur gets the DH parameters associated with Alice's public key. He must use
        * the same parameters when he generates his own key pair.
        */
       DHParameterSpec dhParamFromAlicePubKey = ((DHPublicKey) alicePubKey).getParams();
 
-      // Bob creates his own DH key pair
-      System.out.println("BOB: Generate DH keypair ...");
-      KeyPairGenerator bobKpairGen = KeyPairGenerator.getInstance("DH");
-      bobKpairGen.initialize(dhParamFromAlicePubKey);
-      KeyPair bobKpair = bobKpairGen.generateKeyPair();
+      // Serveur creates his own DH key pair
+      System.out.println("Serveur: Generate DH keypair ...");
+      KeyPairGenerator serveurKpairGen = KeyPairGenerator.getInstance("DH");
+      serveurKpairGen.initialize(dhParamFromAlicePubKey);
+      KeyPair serveurKpair = serveurKpairGen.generateKeyPair();
 
-      // Bob creates and initializes his DH KeyAgreement object
-      System.out.println("BOB: Initialization ...");
-      KeyAgreement bobKeyAgree = KeyAgreement.getInstance("DH");
-      bobKeyAgree.init(bobKpair.getPrivate());
+      // Serveur creates and initializes his DH KeyAgreement object
+      System.out.println("Serveur: Initialization ...");
+      KeyAgreement serveurKeyAgree = KeyAgreement.getInstance("DH");
+      serveurKeyAgree.init(serveurKpair.getPrivate());
 
-      // Bob encodes his public key, and sends it over to Alice.
-      byte[] bobPubKeyEnc = bobKpair.getPublic().getEncoded();
-      String to_send = Base64.getEncoder().encodeToString(bobPubKeyEnc);
+      // Serveur encodes his public key, and sends it over to Alice.
+      byte[] serveurPubKeyEnc = serveurKpair.getPublic().getEncoded();
+      String to_send = Base64.getEncoder().encodeToString(serveurPubKeyEnc);
       writer.println(to_send);
 
-      System.out.println("BOB: Execute PHASE1 ...");
-      bobKeyAgree.doPhase(alicePubKey, true);
+      System.out.println("Serveur: Execute PHASE1 ...");
+      serveurKeyAgree.doPhase(alicePubKey, true);
 
-      byte[] bobSharedSecret = new byte[256];
+      byte[] serveurSharedSecret = new byte[256];
 
-      bobKeyAgree.generateSecret(bobSharedSecret, 0);
-      this.secret = toHexString(bobSharedSecret);
-      System.out.println("Bob secret: " + toHexString(bobSharedSecret));
+      serveurKeyAgree.generateSecret(serveurSharedSecret, 0);
+      this.secret = toHexString(serveurSharedSecret);
+      System.out.println("Serveur secret: " + toHexString(serveurSharedSecret));
 
       // Challenge
       System.out.println("Challenge Sent");

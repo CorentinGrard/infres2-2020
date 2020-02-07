@@ -49,37 +49,37 @@ public class ClientProcessor implements Runnable {
 
       // DH
       System.out.println("Generate DH keypair ...");
-      KeyPairGenerator aliceKpairGen = KeyPairGenerator.getInstance("DH");
-      aliceKpairGen.initialize(2048);
-      KeyPair aliceKpair = aliceKpairGen.generateKeyPair();
+      KeyPairGenerator clientKpairGen = KeyPairGenerator.getInstance("DH");
+      clientKpairGen.initialize(2048);
+      KeyPair clientKpair = clientKpairGen.generateKeyPair();
 
-      KeyAgreement aliceKeyAgree = KeyAgreement.getInstance("DH");
-      aliceKeyAgree.init(aliceKpair.getPrivate());
+      KeyAgreement clientKeyAgree = KeyAgreement.getInstance("DH");
+      clientKeyAgree.init(clientKpair.getPrivate());
 
-      byte[] alicePubKeyEnc = aliceKpair.getPublic().getEncoded();
+      byte[] clientPubKeyEnc = clientKpair.getPublic().getEncoded();
 
-      X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(alicePubKeyEnc);
+      X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(clientPubKeyEnc);
 
-      String to_send = Base64.getEncoder().encodeToString(alicePubKeyEnc);
+      String to_send = Base64.getEncoder().encodeToString(clientPubKeyEnc);
       writer.println(to_send);
       String to_decode = reader.readLine();
-      byte[] bobPubKeyEnc = Base64.getDecoder().decode(to_decode);
+      byte[] serveurPubKeyEnc = Base64.getDecoder().decode(to_decode);
 
       /*
        * Alice uses Bob's public key for the first (and only) phase of her version of
        * the DH protocol. Before she can do so, she has to instantiate a DH public key
        * from Bob's encoded key material.
        */
-      KeyFactory aliceKeyFac = KeyFactory.getInstance("DH");
-      x509KeySpec = new X509EncodedKeySpec(bobPubKeyEnc);
-      PublicKey bobPubKey = aliceKeyFac.generatePublic(x509KeySpec);
-      System.out.println("ALICE: Execute PHASE1 ...");
-      aliceKeyAgree.doPhase(bobPubKey, true);
+      KeyFactory clientKeyFac = KeyFactory.getInstance("DH");
+      x509KeySpec = new X509EncodedKeySpec(serveurPubKeyEnc);
+      PublicKey serveurPubKey = clientKeyFac.generatePublic(x509KeySpec);
+      System.out.println("Client: Execute PHASE1 ...");
+      clientKeyAgree.doPhase(serveurPubKey, true);
 
-      byte[] aliceSharedSecret = new byte[256];
-      aliceSharedSecret = aliceKeyAgree.generateSecret();
-      this.secret = toHexString(aliceSharedSecret);
-      System.out.println("Alice secret: " + toHexString(aliceSharedSecret));
+      byte[] clientSharedSecret = new byte[256];
+      clientSharedSecret = clientKeyAgree.generateSecret();
+      this.secret = toHexString(clientSharedSecret);
+      System.out.println("Client secret: " + toHexString(clientSharedSecret));
 
       // Challenge
       String challenge = reader.readLine();
