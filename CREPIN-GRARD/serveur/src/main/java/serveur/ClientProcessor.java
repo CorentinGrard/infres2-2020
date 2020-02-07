@@ -5,6 +5,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+
+import javax.crypto.KeyAgreement;
+import javax.crypto.interfaces.DHPublicKey;
+import javax.crypto.spec.DHParameterSpec;
 
 public class ClientProcessor implements Runnable {
 
@@ -24,8 +34,6 @@ public class ClientProcessor implements Runnable {
     System.out.println("Entrez votre username : ");
     try {
       this.user = clavier.readLine();
-      System.out.println("Entrez votre password : ");
-      this.password = clavier.readLine();
     } catch (Exception e) {
       // TODO: handle exception
     }
@@ -36,9 +44,50 @@ public class ClientProcessor implements Runnable {
       this.writer = new PrintWriter(sock.getOutputStream(), true);
       this.reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 
+      // DH
+
+      String to_decode = reader.readLine();
+      byte[] alicePubKeyEnc = Base64.getDecoder().decode(to_decode);
+
+      KeyFactory bobKeyFac = KeyFactory.getInstance("DH");
+      X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(alicePubKeyEnc);
+
+      PublicKey alicePubKey = bobKeyFac.generatePublic(x509KeySpec);
+
+      /*
+       * Bob gets the DH parameters associated with Alice's public key. He must use
+       * the same parameters when he generates his own key pair.
+       */
+      DHParameterSpec dhParamFromAlicePubKey = ((DHPublicKey) alicePubKey).getParams();
+
+      // Bob creates his own DH key pair
+      System.out.println("BOB: Generate DH keypair ...");
+      KeyPairGenerator bobKpairGen = KeyPairGenerator.getInstance("DH");
+      bobKpairGen.initialize(dhParamFromAlicePubKey);
+      KeyPair bobKpair = bobKpairGen.generateKeyPair();
+
+      // Bob creates and initializes his DH KeyAgreement object
+      System.out.println("BOB: Initialization ...");
+      KeyAgreement bobKeyAgree = KeyAgreement.getInstance("DH");
+      bobKeyAgree.init(bobKpair.getPrivate());
+
+      // Bob encodes his public key, and sends it over to Alice.
+      byte[] bobPubKeyEnc = bobKpair.getPublic().getEncoded();
+      String to_send = Base64.getEncoder().encodeToString(bobPubKeyEnc);
+      writer.println(to_send);
+
+      System.out.println("BOB: Execute PHASE1 ...");
+      bobKeyAgree.doPhase(alicePubKey, true);
+
+      byte[] bobSharedSecret = new byte[256];
+
+      bobKeyAgree.generateSecret(bobSharedSecret, 0);
+      this.password = toHexString(bobSharedSecret);
+      System.out.println("Bob secret: " + toHexString(bobSharedSecret));
+
       // Challenge
       System.out.println("Challenge Sent");
-      Challenge challenge = new Challenge(user);
+      Challenge challenge = new Challenge(this.user, this.password);
       writer.println(challenge.getChallenge());
       String hashChallenge = reader.readLine();
       if (!challenge.compareChallenge(hashChallenge)) {
@@ -48,7 +97,7 @@ public class ClientProcessor implements Runnable {
       System.out.println("Challenge Completed");
 
       // Encryption
-      this.chat = new ChatChat(user, password);
+      this.chat = new ChatChat(this.user, this.password);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -97,5 +146,32 @@ public class ClientProcessor implements Runnable {
     writer.close();
     sock.close();
     clavier.close();
+  }
+
+      /*
+     * Converts a byte to hex digit and writes to the supplied buffer
+     */
+    private static void byte2hex(byte b, StringBuffer buf) {
+      char[] hexChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
+              '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+      int high = ((b & 0xf0) >> 4);
+      int low = (b & 0x0f);
+      buf.append(hexChars[high]);
+      buf.append(hexChars[low]);
+  }
+
+  /*
+   * Converts a byte array to hex string
+   */
+  private static String toHexString(byte[] block) {
+      StringBuffer buf = new StringBuffer();
+      int len = block.length;
+      for (int i = 0; i < len; i++) {
+          byte2hex(block[i], buf);
+          if (i < len-1) {
+              buf.append(":");
+          }
+      }
+      return buf.toString();
   }
 }
