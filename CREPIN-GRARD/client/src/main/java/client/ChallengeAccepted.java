@@ -9,17 +9,22 @@ import java.util.Base64;
 
 public class ChallengeAccepted {
 
-    String challenge;
-    String challengeHashed;
-    String hashedPassword;
+    private String challengeHashed;
 
-    public ChallengeAccepted(String challengeRecu,String hashedPasswordRecu) throws InvalidKeySpecException, NoSuchAlgorithmException {
-        this.challenge = challengeRecu;
-        this.hashedPassword = hashedPasswordRecu;
-        this.challengeHashed = GenerateHash(challengeRecu,hashedPasswordRecu);
+    public ChallengeAccepted(String challengeRecu, String user, String password)
+            throws InvalidKeySpecException, NoSuchAlgorithmException {
+        ServeurDB db = new ServeurDB();
+        String salt = db.selectSalt(user);
+        String hashedPassword = GenerateHash(password, salt);
+        this.challengeHashed = GenerateHash(challengeRecu, hashedPassword);
     }
 
-    public static String GenerateHash(String password, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public String getChallengeHashed(){
+        return challengeHashed;
+    }
+
+    public static String GenerateHash(String password, String salt)
+            throws NoSuchAlgorithmException, InvalidKeySpecException {
         KeySpec spec = new PBEKeySpec(password.toCharArray(), Base64.getDecoder().decode(salt), 65536, 256);
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         byte[] hashedPassword = factory.generateSecret(spec).getEncoded();

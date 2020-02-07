@@ -14,6 +14,8 @@ public class ClientProcessor implements Runnable {
   private BufferedReader reader = null;
   private BufferedReader clavier = null;
   private ChatChat chat;
+  private String user;
+  private String password;
 
   public ClientProcessor(Socket pSock, ServeurDB db) {
     this.sock = pSock;
@@ -21,10 +23,9 @@ public class ClientProcessor implements Runnable {
     this.clavier = new BufferedReader(new InputStreamReader(System.in));
     System.out.println("Entrez votre username : ");
     try {
-      String user = clavier.readLine();
+      this.user = clavier.readLine();
       System.out.println("Entrez votre password : ");
-      String password = clavier.readLine();
-      this.chat = new ChatChat(user, password);
+      this.password = clavier.readLine();
     } catch (Exception e) {
       // TODO: handle exception
     }
@@ -34,6 +35,20 @@ public class ClientProcessor implements Runnable {
     try {
       this.writer = new PrintWriter(sock.getOutputStream(), true);
       this.reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+
+      // Challenge
+      System.out.println("Challenge Sent");
+      Challenge challenge = new Challenge(user);
+      writer.println(challenge.getChallenge());
+      String hashChallenge = reader.readLine();
+      if (!challenge.compareChallenge(hashChallenge)) {
+        stopConnection();
+      }
+      writer.println("Challenge Completed");
+      System.out.println("Challenge Completed");
+
+      // Encryption
+      this.chat = new ChatChat(user, password);
     } catch (Exception e) {
       e.printStackTrace();
     }

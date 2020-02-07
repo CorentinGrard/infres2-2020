@@ -1,4 +1,4 @@
-package main.java.serveur;
+package serveur;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -14,13 +14,20 @@ public class Challenge {
     String monChallengeHashed;
     String hashedPassword;
 
-    public Challenge(String hashedPasswordRecu) throws InvalidKeySpecException, NoSuchAlgorithmException {
+    public Challenge(String username) throws InvalidKeySpecException, NoSuchAlgorithmException {
+        ServeurDB db = new ServeurDB();
+        String hashedPassword = db.selectHashedPassword(username);
+
         SecureRandom random = new SecureRandom();
         byte[] challenge = new byte[16];
         random.nextBytes(challenge);
-        this.hashedPassword = hashedPasswordRecu;
+        this.hashedPassword = hashedPassword;
         this.monChallenge = Base64.getEncoder().encodeToString(challenge);
-        this.monChallengeHashed = GenerateHash(monChallenge,hashedPasswordRecu);
+        this.monChallengeHashed = GenerateHash(monChallenge,hashedPassword);
+    }
+
+    public String getChallenge(){
+        return this.monChallenge;
     }
 
     public static String GenerateHash(String password, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
