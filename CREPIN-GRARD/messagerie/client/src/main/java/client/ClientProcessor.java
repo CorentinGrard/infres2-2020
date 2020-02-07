@@ -63,11 +63,6 @@ public class ClientProcessor implements Runnable {
             String to_decode = reader.readLine();
             byte[] serveurPubKeyEnc = Base64.getDecoder().decode(to_decode);
 
-            /*
-             * Alice uses Bob's public key for the first (and only) phase of her version of
-             * the DH protocol. Before she can do so, she has to instantiate a DH public key
-             * from Bob's encoded key material.
-             */
             KeyFactory clientKeyFac = KeyFactory.getInstance("DH");
             x509KeySpec = new X509EncodedKeySpec(serveurPubKeyEnc);
             PublicKey serveurPubKey = clientKeyFac.generatePublic(x509KeySpec);

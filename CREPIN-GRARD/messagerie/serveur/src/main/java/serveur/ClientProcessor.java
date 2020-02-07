@@ -44,19 +44,19 @@ public class ClientProcessor implements Runnable {
             // DH
 
             String to_decode = reader.readLine();
-            byte[] alicePubKeyEnc = Base64.getDecoder().decode(to_decode);
+            byte[] clientPubKeyEnc = Base64.getDecoder().decode(to_decode);
 
             KeyFactory serveurKeyFac = KeyFactory.getInstance("DH");
-            X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(alicePubKeyEnc);
+            X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(clientPubKeyEnc);
 
-            PublicKey alicePubKey = serveurKeyFac.generatePublic(x509KeySpec);
+            PublicKey clientPubKey = serveurKeyFac.generatePublic(x509KeySpec);
 
-            DHParameterSpec dhParamFromAlicePubKey = ((DHPublicKey) alicePubKey).getParams();
+            DHParameterSpec dhParamFromClientPubKey = ((DHPublicKey) clientPubKey).getParams();
 
             // Serveur creates his own DH key pair
             System.out.println("Serveur: Generate DH keypair ...");
             KeyPairGenerator serveurKpairGen = KeyPairGenerator.getInstance("DH");
-            serveurKpairGen.initialize(dhParamFromAlicePubKey);
+            serveurKpairGen.initialize(dhParamFromClientPubKey);
             KeyPair serveurKpair = serveurKpairGen.generateKeyPair();
 
             // Serveur creates and initializes his DH KeyAgreement object
@@ -64,13 +64,13 @@ public class ClientProcessor implements Runnable {
             KeyAgreement serveurKeyAgree = KeyAgreement.getInstance("DH");
             serveurKeyAgree.init(serveurKpair.getPrivate());
 
-            // Serveur encodes his public key, and sends it over to Alice.
+            // Serveur encodes his public key, and sends it over to Client.
             byte[] serveurPubKeyEnc = serveurKpair.getPublic().getEncoded();
             String to_send = Base64.getEncoder().encodeToString(serveurPubKeyEnc);
             writer.println(to_send);
 
             System.out.println("Serveur: Execute PHASE1 ...");
-            serveurKeyAgree.doPhase(alicePubKey, true);
+            serveurKeyAgree.doPhase(clientPubKey, true);
 
             byte[] serveurSharedSecret = new byte[256];
 
