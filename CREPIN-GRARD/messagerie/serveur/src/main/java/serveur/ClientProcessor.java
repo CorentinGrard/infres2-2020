@@ -107,21 +107,19 @@ public class ClientProcessor implements Runnable {
 
     while (!sock.isClosed()) {
       try {
-        readMessage();
-        sendMessage();
+        if(readMessage())
+          return;
+        if(sendMessage())
+          return;
       } catch (IOException e) {
         e.printStackTrace();
       }
     }
   }
 
-  public void sendMessage() throws IOException {
+  public boolean sendMessage() throws IOException {
     System.out.println("Enter your message : ");
     String str = this.clavier.readLine();
-    if (str.equals("END")) {
-      stopConnection();
-      return;
-    }
     try {
       String encrypt = chat.encrypt(str);
       this.db.addMessage("Client", encrypt);
@@ -129,9 +127,14 @@ public class ClientProcessor implements Runnable {
     } catch (Exception e) {
       // TODO: handle exception
     }
+    if (str.equals("END")) {
+      stopConnection();
+      return true;
+    }
+    return false;
   }
 
-  public void readMessage() throws IOException {
+  public boolean readMessage() throws IOException {
     String crypted = reader.readLine();
     this.db.addMessage("Serveur", crypted);
     try {
@@ -139,11 +142,12 @@ public class ClientProcessor implements Runnable {
       System.out.println("Serveur : " + resp);
       if (resp.equals("END")) {
         stopConnection();
-        return;
+        return true;
       }
     } catch (Exception e) {
       // TODO: handle exception
     }
+    return false;
   }
 
   public void stopConnection() throws IOException {
