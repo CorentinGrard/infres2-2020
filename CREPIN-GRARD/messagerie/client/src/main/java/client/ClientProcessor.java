@@ -42,6 +42,9 @@ public class ClientProcessor implements Runnable {
             this.writer = new PrintWriter(sock.getOutputStream(), true);
             this.reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 
+            //Hello I'm
+            writer.println(this.user);
+
             // DH
             System.out.println("Generate DH keypair ...");
             KeyPairGenerator clientKpairGen = KeyPairGenerator.getInstance("DH");

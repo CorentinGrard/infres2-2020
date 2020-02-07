@@ -25,23 +25,21 @@ public class ClientProcessor implements Runnable {
     private BufferedReader clavier = null;
     private ChatChat chat;
     private String user;
-    private String password;
     private String secret;
 
     public ClientProcessor(Socket pSock, ServeurDB db) throws IOException {
         this.sock = pSock;
         this.db = db;
         this.clavier = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("Entrez votre username : ");
-        this.user = clavier.readLine();
-        System.out.println("Entrez votre password : ");
-        this.password = clavier.readLine();
     }
 
     public void run() {
         try {
             this.writer = new PrintWriter(sock.getOutputStream(), true);
             this.reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+
+            //Le client se connecte
+            this.user = reader.readLine();
 
             // DH
 
@@ -117,7 +115,7 @@ public class ClientProcessor implements Runnable {
         System.out.println("Enter your message : ");
         String str = this.clavier.readLine();
         String encrypt = chat.encrypt(str);
-        this.db.addMessage("Client", encrypt);
+        this.db.addMessage("Serveur", encrypt);
         writer.println(encrypt);
         if (str.equals("END")) {
             stopConnection();
@@ -128,9 +126,9 @@ public class ClientProcessor implements Runnable {
 
     public boolean readMessage() throws Exception {
         String crypted = reader.readLine();
-        this.db.addMessage("Serveur", crypted);
+        this.db.addMessage(this.user, crypted);
         String resp = chat.decrypt(crypted);
-        System.out.println("Serveur : " + resp);
+        System.out.println(this.user+" : " + resp);
         if (resp.equals("END")) {
             stopConnection();
             return true;
