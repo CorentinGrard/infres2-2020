@@ -13,7 +13,6 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 import javax.crypto.KeyAgreement;
-import javax.crypto.ShortBufferException;
 
 public class ClientProcessor implements Runnable {
 
@@ -86,7 +85,14 @@ public class ClientProcessor implements Runnable {
       System.out.println("Challenge Received");
       ChallengeAccepted challengeAccepted = new ChallengeAccepted(challenge, this.user, this.password);
       writer.println(challengeAccepted.getChallengeHashed());
-      System.out.println(reader.readLine());
+      String challenge_completed = reader.readLine();
+      if (challenge_completed.equals("Fail")) {
+        System.out.println("Challenge Failed. Closing connection");
+        stopConnection();
+        return;
+      }else{
+        System.out.println("Challenge Completed");
+      }
 
       // Encryption
       this.chat = new ChatChat(this.user, this.secret);
@@ -107,13 +113,14 @@ public class ClientProcessor implements Runnable {
   public void sendMessage() throws IOException {
     System.out.println("Enter your message : ");
     String str = this.clavier.readLine();
+    if (str.equals("END")) {
+      stopConnection();
+      return;
+    }
     try {
       String encrypt = chat.encrypt(str);
       this.db.addMessage("Client", encrypt);
       writer.println(encrypt);
-      if (str == "END") {
-        stopConnection();
-      }
     } catch (Exception e) {
       // TODO: handle exception
     }
@@ -125,8 +132,9 @@ public class ClientProcessor implements Runnable {
     try {
       String resp = chat.decrypt(crypted);
       System.out.println("Serveur : " + resp);
-      if (resp == "END") {
+      if (resp.equals("END")) {
         stopConnection();
+        return;
       }
     } catch (Exception e) {
       // TODO: handle exception
@@ -138,6 +146,7 @@ public class ClientProcessor implements Runnable {
     writer.close();
     sock.close();
     clavier.close();
+    System.out.println("Connection ended.");
   }
 
   /*

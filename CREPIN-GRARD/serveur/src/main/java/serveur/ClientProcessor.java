@@ -57,10 +57,6 @@ public class ClientProcessor implements Runnable {
 
       PublicKey alicePubKey = serveurKeyFac.generatePublic(x509KeySpec);
 
-      /*
-       * Serveur gets the DH parameters associated with Alice's public key. He must use
-       * the same parameters when he generates his own key pair.
-       */
       DHParameterSpec dhParamFromAlicePubKey = ((DHPublicKey) alicePubKey).getParams();
 
       // Serveur creates his own DH key pair
@@ -94,10 +90,14 @@ public class ClientProcessor implements Runnable {
       writer.println(challenge.getChallenge());
       String hashChallenge = reader.readLine();
       if (!challenge.compareChallenge(hashChallenge)) {
+        writer.println("Fail");
+        System.out.println("Challenge Failed. Closing connection");
         stopConnection();
+        return;
+      } else {
+        writer.println("OK");
+        System.out.println("Challenge Completed");
       }
-      writer.println("Challenge Completed");
-      System.out.println("Challenge Completed");
 
       // Encryption
       this.chat = new ChatChat(this.user, this.secret);
@@ -118,13 +118,14 @@ public class ClientProcessor implements Runnable {
   public void sendMessage() throws IOException {
     System.out.println("Enter your message : ");
     String str = this.clavier.readLine();
+    if (str.equals("END")) {
+      stopConnection();
+      return;
+    }
     try {
       String encrypt = chat.encrypt(str);
       this.db.addMessage("Client", encrypt);
       writer.println(encrypt);
-      if (str == "END") {
-        stopConnection();
-      }
     } catch (Exception e) {
       // TODO: handle exception
     }
@@ -136,8 +137,9 @@ public class ClientProcessor implements Runnable {
     try {
       String resp = chat.decrypt(crypted);
       System.out.println("Serveur : " + resp);
-      if (resp == "END") {
+      if (resp.equals("END")) {
         stopConnection();
+        return;
       }
     } catch (Exception e) {
       // TODO: handle exception
@@ -149,32 +151,32 @@ public class ClientProcessor implements Runnable {
     writer.close();
     sock.close();
     clavier.close();
+    System.out.println("Connection ended.");
   }
 
-      /*
-     * Converts a byte to hex digit and writes to the supplied buffer
-     */
-    private static void byte2hex(byte b, StringBuffer buf) {
-      char[] hexChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
-              '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-      int high = ((b & 0xf0) >> 4);
-      int low = (b & 0x0f);
-      buf.append(hexChars[high]);
-      buf.append(hexChars[low]);
+  /*
+   * Converts a byte to hex digit and writes to the supplied buffer
+   */
+  private static void byte2hex(byte b, StringBuffer buf) {
+    char[] hexChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+    int high = ((b & 0xf0) >> 4);
+    int low = (b & 0x0f);
+    buf.append(hexChars[high]);
+    buf.append(hexChars[low]);
   }
 
   /*
    * Converts a byte array to hex string
    */
   private static String toHexString(byte[] block) {
-      StringBuffer buf = new StringBuffer();
-      int len = block.length;
-      for (int i = 0; i < len; i++) {
-          byte2hex(block[i], buf);
-          if (i < len-1) {
-              buf.append(":");
-          }
+    StringBuffer buf = new StringBuffer();
+    int len = block.length;
+    for (int i = 0; i < len; i++) {
+      byte2hex(block[i], buf);
+      if (i < len - 1) {
+        buf.append(":");
       }
-      return buf.toString();
+    }
+    return buf.toString();
   }
 }
