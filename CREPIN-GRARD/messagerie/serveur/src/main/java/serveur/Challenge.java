@@ -23,10 +23,10 @@ public class Challenge {
         random.nextBytes(challenge);
         this.hashedPassword = hashedPassword;
         this.monChallenge = Base64.getEncoder().encodeToString(challenge);
-        this.monChallengeHashed = GenerateHash(monChallenge,hashedPassword);
+        this.monChallengeHashed = GenerateHash(monChallenge, hashedPassword);
     }
 
-    public String getChallenge(){
+    public String getChallenge() {
         return this.monChallenge;
     }
 
@@ -38,8 +38,8 @@ public class Challenge {
         return Base64.getEncoder().encodeToString(hashedPassword);
     }
 
-    public boolean compareChallenge(String challengeHashed){
-        return(challengeHashed.equals(monChallengeHashed));
+    public boolean compareChallenge(String challengeHashed) {
+        return (challengeHashed.equals(monChallengeHashed));
     }
 
 }

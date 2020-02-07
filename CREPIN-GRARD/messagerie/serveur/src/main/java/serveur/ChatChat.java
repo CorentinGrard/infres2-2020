@@ -12,8 +12,7 @@ import javax.crypto.spec.ChaCha20ParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-public class ChatChat
-{
+public class ChatChat {
     private SecretKey key;
 
     public ChatChat(String user, String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
@@ -24,11 +23,10 @@ public class ChatChat
 
         byte[] hashedPassword = factory.generateSecret(spec).getEncoded();
         SecretKey key = new SecretKeySpec(hashedPassword, "ChaCha20");
-        this.key=key;
+        this.key = key;
     }
 
-    public String encrypt(String plaintext) throws Exception
-    {
+    public String encrypt(String plaintext) throws Exception {
         byte[] nonceBytes = new byte[12];
         int counter = 5;
 
@@ -50,8 +48,7 @@ public class ChatChat
         return Base64.getEncoder().encodeToString(cipherText);
     }
 
-    public String decrypt(String cipherText_base64) throws Exception
-    {
+    public String decrypt(String cipherText_base64) throws Exception {
         byte[] nonceBytes = new byte[12];
         int counter = 5;
 
