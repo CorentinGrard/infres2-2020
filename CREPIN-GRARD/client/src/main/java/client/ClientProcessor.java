@@ -25,14 +25,17 @@ public class ClientProcessor implements Runnable {
   private ChatChat chat;
   private String user;
   private String password;
+  private String secret;
 
   public ClientProcessor(Socket pSock, ServeurDB db) {
     this.sock = pSock;
     this.db = db;
     this.clavier = new BufferedReader(new InputStreamReader(System.in));
-    System.out.println("Entrez votre username : ");
     try {
+      System.out.println("Entrez votre username : ");
       this.user = clavier.readLine();
+      System.out.println("Entrez votre password : ");
+      this.password = clavier.readLine();
     } catch (Exception e) {
       // TODO: handle exception
     }
@@ -75,7 +78,7 @@ public class ClientProcessor implements Runnable {
 
       byte[] aliceSharedSecret = new byte[256];
       aliceSharedSecret = aliceKeyAgree.generateSecret();
-      this.password = toHexString(aliceSharedSecret);
+      this.secret = toHexString(aliceSharedSecret);
       System.out.println("Alice secret: " + toHexString(aliceSharedSecret));
 
       // Challenge
@@ -86,7 +89,7 @@ public class ClientProcessor implements Runnable {
       System.out.println(reader.readLine());
 
       // Encryption
-      this.chat = new ChatChat(this.user, this.password);
+      this.chat = new ChatChat(this.user, this.secret);
     } catch (Exception e) {
       e.printStackTrace();
     }

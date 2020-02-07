@@ -22,7 +22,8 @@ public class ServeurDB {
 
         String sql2 = "CREATE TABLE IF NOT EXISTS user (\n" 
         + "    name text PRIMARY KEY,\n"
-        + "    salt text NOT NULL\n" 
+        + "    salt text NOT NULL,\n" 
+        + "    hash text NOT NULL\n" 
         + ");";
 
         try (Connection conn = this.connect(); Statement stmt = conn.createStatement()) {
@@ -35,11 +36,12 @@ public class ServeurDB {
     }
 
     public void createUser() {
-        String sql = "INSERT INTO user VALUES(?,?)";
+        String sql = "INSERT INTO user VALUES(?,?,?)";
 
         try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, "toto");
             pstmt.setString(2, "sardoche");
+            pstmt.setString(3, "cIf+rKsdL5b2cedA8WFfAT9gKS9XYSM3SPvYauNMl2k=");
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -56,6 +58,23 @@ public class ServeurDB {
             ResultSet rs = pstmt.executeQuery();
 
             return rs.getString("salt");
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return "null";
+    }
+
+    public String selectHashedPassword(String name) {
+        String sql = "SELECT hash FROM user WHERE name = ?";
+
+        try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, name);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            return rs.getString("hash");
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());

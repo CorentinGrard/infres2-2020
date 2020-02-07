@@ -14,15 +14,14 @@ public class Challenge {
     String monChallengeHashed;
     String hashedPassword;
 
-    public Challenge(String username, String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
+    public Challenge(String username) throws InvalidKeySpecException, NoSuchAlgorithmException {
         ServeurDB db = new ServeurDB();
-        String salt = db.selectSalt(username);
-
-        this.hashedPassword = GenerateHash(password, salt);
+        String hashedPassword = db.selectHashedPassword(username);
 
         SecureRandom random = new SecureRandom();
         byte[] challenge = new byte[16];
         random.nextBytes(challenge);
+        this.hashedPassword = hashedPassword;
         this.monChallenge = Base64.getEncoder().encodeToString(challenge);
         this.monChallengeHashed = GenerateHash(monChallenge,hashedPassword);
     }
