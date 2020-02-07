@@ -20,11 +20,11 @@ public class ServeurDB {
         String sql = "CREATE TABLE IF NOT EXISTS message (\n" + "    id integer PRIMARY KEY,\n"
                 + "    name text NOT NULL,\n" + "    message text NOT NULL\n" + ");";
 
-        String sql2 = "CREATE TABLE IF NOT EXISTS user (\n" 
-        + "    name text PRIMARY KEY,\n"
-        + "    salt text NOT NULL,\n" 
-        + "    hash text NOT NULL\n" 
-        + ");";
+        String sql2 = "CREATE TABLE IF NOT EXISTS user (\n"
+                + "    name text PRIMARY KEY,\n"
+                + "    salt text NOT NULL,\n"
+                + "    hash text NOT NULL\n"
+                + ");";
 
         try (Connection conn = this.connect(); Statement stmt = conn.createStatement()) {
             // create a new table

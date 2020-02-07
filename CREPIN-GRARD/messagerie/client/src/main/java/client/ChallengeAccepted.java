@@ -19,7 +19,7 @@ public class ChallengeAccepted {
         this.challengeHashed = GenerateHash(challengeRecu, hashedPassword);
     }
 
-    public String getChallengeHashed(){
+    public String getChallengeHashed() {
         return challengeHashed;
     }
 
